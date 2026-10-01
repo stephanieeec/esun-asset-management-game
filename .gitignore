@@ -5,3 +5,4 @@ node_modules/
 !.env.example
 game/tests/*.png
 .sites-runtime/
+.github-cli/
