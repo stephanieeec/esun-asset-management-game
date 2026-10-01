@@ -1,15 +1,28 @@
 // EDIT HERE: wording, artwork, shapes, sizes, positions, and matching rules.
 // All positions are pixels on the 1920 × 1080 design stage.
 export const CONFIG = {
+  buttonAdjustments: { start: { x:0, y:0, width:445, height:120 }, home: { x:0, y:0, width:445, height:120 } },
+  pageTextAdjustments: {
+    'game-title': { x: 0, y: 0, fontSize: 128, spacing: 0.05 },
+    instructions: { x: 0, y: 0, fontSize: 49, spacing: 0.05 },
+    start: { x: 0, y: 0, fontSize: 61, spacing: 0.05 },
+    'completion-title': { x: 0, y: -30, fontSize: 74, spacing: 0.05 },
+    home: { x: 0, y: 0, fontSize: 62, spacing: 0.05 },
+  },
   // Final local visual-editor offsets, in 1920 × 1080 canvas pixels.
   textAdjustments: {
-    'finance-piece': { x: 0, y: -5, fontDelta: -1 },
-    'crossborder-piece': { x: 0, y: 0, fontDelta: -1 },
-    'family-piece': { x: -2, y: 0, fontDelta: -1 },
-    'insurance-piece': { x: -5, y: 6, fontDelta: -1 },
-    'investment-piece': { x: -2, y: -2, fontDelta: -1 },
-    'bubble-investment': { x: 0, y: 0, width: 10, height: 9 },
-    'title-family': { x: 2, y: 0, fontDelta: 0 },
+    'finance-piece': { x: 0, y: -5, fontDelta: -2, spacing: 0.05 },
+    'crossborder-piece': { x: 0, y: 0, fontDelta: -2, spacing: 0.05 },
+    'family-piece': { x: -2, y: 0, fontDelta: -2, spacing: 0.05 },
+    'insurance-piece': { x: -5, y: 6, fontDelta: -2, spacing: 0.05 },
+    'investment-piece': { x: -2, y: -2, fontDelta: -2, spacing: 0.05 },
+    'bubble-investment': { x: 0, y: 0, width: 14, height: 14 },
+    'title-family': { x: 2, y: 0, fontDelta: 0, spacing: 0.03 },
+    'title-investment': { x: 0, y: 0, spacing: 0.03 },
+    'title-finance': { x: 0, y: 0, spacing: 0.03 },
+    'title-insurance': { x: 0, y: 0, spacing: 0.03 },
+    'title-crossborder': { x: 0, y: 0, spacing: 0.03 },
+    'puzzle-home-text': { x: 0, y: 1, fontDelta: -2, spacing: 0.05 },
   },
   stage: { width: 1920, height: 1080 },
   assets: {
@@ -20,7 +33,7 @@ export const CONFIG = {
     homeBrand: './assets/logo_green.png',
   },
   theme: { accent: '#25bac4', ink: '#00565b', headline: '#191919' },
-  behavior: { snapTolerance: 100, completionDelay: 950, fullscreenOnStart: true },
+  behavior: { snapTolerance: 100, completionDelay: 1000, fullscreenOnStart: true },
   text: {
     title: '玉山亞資服務配對挑戰',
     instructions: ['認識玉山亞洲資產管理專區 5 大核心服務', '完成 5 組正確配對，即可完成挑戰!'],

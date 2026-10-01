@@ -42,3 +42,21 @@ button:focus-visible { outline: 6px solid #007e86; outline-offset: 7px; }
 @media (prefers-reduced-motion: reduce) { .piece, .action-button, #feedback { transition: none; } }
 
 .game-brand img { width: 100%; height: 100%; left: 0; top: 0; object-fit: contain; filter: none; }
+
+/* PAGE 1 — EDITABLE CHARACTER SPACING
+   Change only these three values (additional spacing per character):
+   0em    = current/default spacing
+   0.02em = slightly wider
+   0.04em = moderately wider
+   0.06em = noticeably wider
+   The main title retains its existing -3px baseline tracking.
+   Font size, position, and line spacing are controlled elsewhere.
+*/
+#opening {
+  --home-title-letter-spacing: 0em;       /* 玉山亞資服務配對挑戰 */
+  --home-description-letter-spacing: 0em; /* Two-line description */
+  --home-button-letter-spacing: 0em;      /* 開始遊戲 */
+}
+#opening #game-title { letter-spacing: calc(-3px + var(--home-title-letter-spacing)); }
+#opening #instructions { letter-spacing: var(--home-description-letter-spacing); }
+#opening #start { letter-spacing: var(--home-button-letter-spacing); }

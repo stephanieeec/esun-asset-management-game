@@ -1,10 +1,10 @@
-import { CONFIG } from './config.js?v=dome-offset-1';
+import { CONFIG } from './config.js?v=finished-buttons-1';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
 const holeById = new Map(CONFIG.holes.map((hole) => [hole.id, hole]));
 const pieces = new Map();
-const state = { page: 'opening', placed: new Set(), selected: null, drag: null };
+const state = { page: 'opening', placed: new Set(), selected: null, drag: null, transitioning: false };
 let completionTimer, feedbackTimer, scale = 1, pieceStack = 10;
 let previousStartingOrder = '';
 
@@ -107,7 +107,7 @@ function nearestHole(piece) {
 // Both touch dragging and tap/keyboard placement use this same validation.
 function placePiece(id, targetId) {
   const piece = pieces.get(id), hole = holeById.get(targetId);
-  if (state.page !== 'puzzle' || !piece || !hole || state.placed.has(id)) return false;
+  if (state.transitioning || state.page !== 'puzzle' || !piece || !hole || state.placed.has(id)) return false;
   clearSelection();
   if (piece.config.target !== targetId || $(`hole-${targetId}`).classList.contains('filled')) {
     movePiece(piece, piece.start.x, piece.start.y);
@@ -124,7 +124,8 @@ function placePiece(id, targetId) {
   renderProgress();
   showFeedback(CONFIG.text.correct);
   if (state.placed.size === CONFIG.holes.length) {
-    completionTimer = setTimeout(() => showPage('completion'), CONFIG.behavior.completionDelay);
+    // Allow the existing 220ms snap to finish, then pause for 1000ms.
+    completionTimer = setTimeout(() => showPage('completion'), 220 + CONFIG.behavior.completionDelay);
   }
   return true;
 }
@@ -154,7 +155,7 @@ function finishDrag(event, cancelled = false) {
 function attachDrag(piece) {
   const element = piece.element;
   element.addEventListener('pointerdown', (event) => {
-    if (state.page !== 'puzzle' || state.drag || state.placed.has(piece.config.id) || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    if (state.transitioning || state.page !== 'puzzle' || state.drag || state.placed.has(piece.config.id) || (event.pointerType === 'mouse' && event.button !== 0)) return;
     event.preventDefault();
     clearSelection();
     // Catch a piece at its visible position, even during its return animation.
@@ -235,16 +236,41 @@ function resetPuzzle(shuffle = true) {
   renderProgress();
 }
 
-function showPage(page) {
-  state.page = page;
-  for (const id of ['opening', 'puzzle', 'completion']) $(id).hidden = id !== page;
+async function showPage(page, beforeReveal = () => {}, immediate = false) {
+  if (state.transitioning || (state.page === page && !immediate)) return;
+  state.transitioning = true;
+  clearTimeout(completionTimer);
+  const outgoing = $(state.page), incoming = $(page);
+  const duration = immediate || matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600;
+  // Lock interaction while the current screen fades; reset only once it is hidden.
+  outgoing.inert = true;
+  async function fade(element, from, to) {
+    if (!duration) return;
+    const animation = element.animate([{ opacity: from }, { opacity: to }], { duration, easing: 'ease-in-out', fill: 'both' });
+    await animation.finished;
+    animation.cancel();
+  }
+  try {
+    await fade(outgoing, 1, 0);
+    outgoing.hidden = true;
+    if (duration) await new Promise(resolve => setTimeout(resolve, 150));
+    beforeReveal();
+    state.page = page;
+    for (const id of ['opening', 'puzzle', 'completion']) $(id).hidden = id !== page;
+    incoming.inert = true;
+    await fade(incoming, 0, 1);
+  } finally {
+    outgoing.inert = false;
+    incoming.inert = false;
+    state.transitioning = false;
+  }
   if (page === 'opening') $('start').focus({ preventScroll: true });
   if (page === 'completion') $('home').focus({ preventScroll: true });
 }
 
 function startGame() {
-  resetPuzzle();
-  showPage('puzzle');
+  if (state.transitioning) return;
+  showPage('puzzle', () => resetPuzzle());
   if (CONFIG.behavior.fullscreenOnStart && !document.fullscreenElement && document.documentElement.requestFullscreen) {
     document.documentElement.requestFullscreen().catch(() => {});
   }
@@ -324,8 +350,8 @@ function initialize() {
     attachDrag(piece);
   }
   $('start').addEventListener('click', startGame);
-  $('home').addEventListener('click', () => { resetPuzzle(false); showPage('opening'); });
-  $('puzzle-home').addEventListener('click', () => { resetPuzzle(false); showPage('opening'); });
+  $('home').addEventListener('click', () => showPage('opening', () => resetPuzzle(false)));
+  $('puzzle-home').addEventListener('click', () => showPage('opening', () => resetPuzzle(false)));
   document.addEventListener('contextmenu', (event) => event.preventDefault());
   document.addEventListener('dragstart', (event) => event.preventDefault());
   document.addEventListener('keydown', (event) => {
@@ -357,6 +383,15 @@ function registerTools() {
 }
 
 function applyFinishedTextSettings() {
+  const change = CONFIG.textAdjustments['puzzle-home-text'];
+  if (change) {
+    const button = $('puzzle-home'), text = document.createElement('span');
+    text.textContent = change.text ?? button.textContent;
+    text.style.transform = `translate(${change.x || 0}px, ${change.y || 0}px)`;
+    text.style.fontSize = `${CONFIG.layout.puzzleHome.fontSize + (change.fontDelta || 0)}px`;
+    text.style.letterSpacing = `${change.spacing || 0}em`;
+    button.replaceChildren(text);
+  }
   for (const [id, piece] of pieces) {
     const change = CONFIG.textAdjustments[id];
     if (!change) continue;
@@ -364,6 +399,7 @@ function applyFinishedTextSettings() {
     text.style.left = `calc(7% + ${change.x || 0}px)`;
     text.style.top = `calc(${(piece.config.textY || .5) * 100}% + ${change.y || 0}px)`;
     text.style.fontSize = `${(piece.config.fontSize || 28) + (change.fontDelta || 0)}px`;
+    text.style.letterSpacing = `${change.spacing || 0}em`;
   }
   document.querySelectorAll('.hole-label').forEach((bubble, index) => {
     const hole = CONFIG.holes[index];
@@ -381,6 +417,7 @@ function applyFinishedTextSettings() {
       text.append(...bubble.childNodes); bubble.append(text);
       text.style.transform = `translate(${titleChange.x || 0}px, ${titleChange.y || 0}px)`;
       text.style.fontSize = `${34 + (titleChange.fontDelta || 0)}px`;
+      text.style.letterSpacing = `${titleChange.spacing || 0}em`;
     }
   });
 }
@@ -390,8 +427,38 @@ initialize();
 // The exhibition game never loads the local design interface.
 if (new URLSearchParams(location.search).get('editText') === '1' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
   resetPuzzle();
-  showPage('puzzle');
-  import('./text-editor.js').then(({ openTextEditor }) => openTextEditor(pieces));
+  showPage('puzzle', () => {}, true);
+  import('./text-editor.js?v=button-words-1').then(({ openTextEditor }) => openTextEditor(pieces));
 }
 
 if (!(new URLSearchParams(location.search).get('editText') === '1' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname))) applyFinishedTextSettings();
+
+if (new URLSearchParams(location.search).get('editHome') === '1' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+  import('./home-editor.js?v=both-buttons-1').then(({ openHomeEditor }) => openHomeEditor());
+}
+
+if (new URLSearchParams(location.search).get('editCompletion') === '1' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+  showPage('completion', () => {}, true).then(() => import('./home-editor.js?v=both-buttons-1')).then(({ openHomeEditor }) => openHomeEditor(true));
+}
+
+for (const [id, change] of Object.entries(CONFIG.pageTextAdjustments)) {
+  const isCompletion = ['completion-title', 'home'].includes(id);
+  const query = new URLSearchParams(location.search);
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+  if (local && query.get(isCompletion ? 'editCompletion' : 'editHome') === '1') continue;
+  const element = $(id), text = document.createElement('span');
+  text.style.cssText = 'display:flex;flex-direction:column;align-items:center;white-space:nowrap;';
+  text.append(...element.childNodes);
+  element.replaceChildren(text);
+  text.style.transform = `translate(${change.x}px, ${change.y}px)`;
+  text.style.fontSize = `${change.fontSize}px`;
+  text.style.letterSpacing = `calc(${id === 'game-title' ? -3 : 0}px + ${change.spacing}em)`;
+}
+
+for (const [id, change] of Object.entries(CONFIG.buttonAdjustments)) {
+  const query = new URLSearchParams(location.search);
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+  if (local && query.get(id === 'home' ? 'editCompletion' : 'editHome') === '1') continue;
+  const base = CONFIG.layout[id];
+  position($(id), { x:base.x + change.x, y:base.y + change.y, width:change.width, height:change.height });
+}
