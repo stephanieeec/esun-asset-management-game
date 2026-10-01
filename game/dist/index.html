@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#25bac4">
   <title>玉山亞資服務配對挑戰</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2325bac4'/%3E%3Cpath d='M12 5h8v7h7v8h-7v7h-8v-7H5v-8h7z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=guide-layout-1">
 </head>
 <body>
   <svg class="filter-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -20,7 +20,7 @@
   </svg>
   <main id="stage" aria-label="玉山亞資服務配對挑戰">
     <section id="opening" class="screen" aria-labelledby="game-title">
-      <div class="brand main-brand" role="img" aria-label="玉山金控"></div>
+      <div class="brand main-brand" role="img" aria-label="玉山金控"><img src="./assets/logo_green.png" alt="" draggable="false"></div>
       <h1 id="game-title"></h1>
       <p id="instructions"></p>
       <img class="mascot" alt="玉山黑熊吉祥物" draggable="false">
@@ -29,17 +29,18 @@
     <section id="puzzle" class="screen" aria-label="拖曳拼圖至對應的服務位置" hidden>
       <div id="holes"></div>
       <div id="pieces"></div>
-      <div class="brand game-brand" role="img" aria-label="玉山金控"></div>
+      <div class="brand game-brand" role="img" aria-label="玉山金控"><img src="./assets/logo_green.png" alt="" draggable="false"></div>
       <div id="feedback" role="status" aria-live="polite"></div>
       <p id="progress" class="sr-only" aria-live="polite"></p>
+      <button id="puzzle-home" class="action-button" type="button"></button>
     </section>
     <section id="completion" class="screen" aria-labelledby="completion-title" hidden>
-      <div class="brand main-brand" role="img" aria-label="玉山金控"></div>
+      <div class="brand main-brand" role="img" aria-label="玉山金控"><img src="./assets/logo_green.png" alt="" draggable="false"></div>
       <h2 id="completion-title"></h2>
       <img class="mascot" alt="玉山黑熊吉祥物" draggable="false">
       <button id="home" class="action-button" type="button"></button>
     </section>
   </main>
-  <script type="module" src="./js/game.js"></script>
+  <script type="module" src="./js/game.js?v=piece-gap-1"></script>
 </body>
 </html>

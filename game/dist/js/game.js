@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js';
+import { CONFIG } from './config.js?v=puzzle-home-1';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -6,6 +6,7 @@ const holeById = new Map(CONFIG.holes.map((hole) => [hole.id, hole]));
 const pieces = new Map();
 const state = { page: 'opening', placed: new Set(), selected: null, drag: null };
 let completionTimer, feedbackTimer, scale = 1, pieceStack = 10;
+let previousStartingOrder = '';
 
 function position(element, rect) {
   for (const key of ['width', 'height', 'fontSize']) if (rect[key] !== undefined) element.style[key] = `${rect[key]}px`;
@@ -82,7 +83,7 @@ function selectPiece(id) {
 function movePiece(piece, x, y) {
   piece.x = x;
   piece.y = y;
-  piece.element.style.transform = `translate(${x - piece.config.x}px, ${y - piece.config.y}px)`;
+  piece.element.style.transform = `translate(${x - piece.start.x}px, ${y - piece.start.y}px)`;
 }
 
 function clearHighlights() {
@@ -109,7 +110,7 @@ function placePiece(id, targetId) {
   if (state.page !== 'puzzle' || !piece || !hole || state.placed.has(id)) return false;
   clearSelection();
   if (piece.config.target !== targetId || $(`hole-${targetId}`).classList.contains('filled')) {
-    movePiece(piece, piece.config.x, piece.config.y);
+    movePiece(piece, piece.start.x, piece.start.y);
     showFeedback(CONFIG.text.incorrect);
     return false;
   }
@@ -137,17 +138,17 @@ function finishDrag(event, cancelled = false) {
   if (piece.element.hasPointerCapture(event.pointerId)) piece.element.releasePointerCapture(event.pointerId);
   clearHighlights();
   if (cancelled || state.page !== 'puzzle') {
-    movePiece(piece, piece.config.x, piece.config.y);
+    movePiece(piece, piece.start.x, piece.start.y);
     return;
   }
   if (!drag.moved) {
-    movePiece(piece, piece.config.x, piece.config.y);
+    movePiece(piece, piece.start.x, piece.start.y);
     selectPiece(piece.config.id);
     return;
   }
   const hole = nearestHole(piece);
   if (hole) placePiece(piece.config.id, hole.id);
-  else movePiece(piece, piece.config.x, piece.config.y);
+  else movePiece(piece, piece.start.x, piece.start.y);
 }
 
 function attachDrag(piece) {
@@ -192,7 +193,25 @@ function attachDrag(piece) {
   });
 }
 
-function resetPuzzle() {
+function shuffleStartingSlots() {
+  const order = [...pieces.values()];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  const holeOrder = CONFIG.holes.map(hole => hole.id).join(',');
+  const signature = () => order.map(piece => piece.config.target).join(',');
+  // Reject the solved order and a repeat of the previous round, without unbounded retries.
+  while (signature() === holeOrder || signature() === previousStartingOrder) order.push(order.shift());
+  previousStartingOrder = signature();
+  order.forEach((piece, index) => {
+    const slot = CONFIG.startingSlots[index];
+    piece.start = { x: slot.x, y: slot.y };
+    position(piece.element, { ...piece.start, width: piece.width, height: piece.height });
+  });
+}
+
+function resetPuzzle(shuffle = true) {
   clearTimeout(completionTimer);
   clearTimeout(feedbackTimer);
   if (state.drag) finishDrag({ pointerId: state.drag.pointerId }, true);
@@ -200,13 +219,14 @@ function resetPuzzle() {
   clearHighlights();
   state.placed.clear();
   pieceStack = 10;
+  if (shuffle) shuffleStartingSlots();
   $('feedback').classList.remove('visible');
   for (const piece of pieces.values()) {
     piece.element.disabled = false;
     piece.element.style.zIndex = '10';
     piece.element.classList.remove('placed', 'selected', 'dragging');
     piece.element.setAttribute('aria-label', piece.config.lines.join('；') || '干擾拼圖');
-    movePiece(piece, piece.config.x, piece.config.y);
+    movePiece(piece, piece.start.x, piece.start.y);
   }
   for (const hole of CONFIG.holes) {
     $(`hole-${hole.id}`).classList.remove('filled');
@@ -240,6 +260,8 @@ function initialize() {
   setLines($('completion-title'), CONFIG.text.completed);
   $('start').textContent = CONFIG.text.start;
   $('home').textContent = CONFIG.text.home;
+  $('puzzle-home').textContent = CONFIG.text.puzzleHome;
+  position($('puzzle-home'), CONFIG.layout.puzzleHome);
   for (const [id, key] of [['game-title', 'title'], ['instructions', 'instructions'], ['start', 'start'], ['completion-title', 'completion'], ['home', 'home']]) position($(id), CONFIG.layout[key]);
   for (const mascot of document.querySelectorAll('.mascot')) {
     position(mascot, CONFIG.layout.mascot);
@@ -248,6 +270,10 @@ function initialize() {
   }
   for (const brand of document.querySelectorAll('.brand')) {
     position(brand, brand.classList.contains('game-brand') ? CONFIG.layout.gameBrand : CONFIG.layout.brand);
+    if (brand.querySelector('img')) {
+      brand.querySelector('img').src = CONFIG.assets.homeBrand;
+      continue;
+    }
     const image = new Image();
     image.src = CONFIG.assets.brand;
     image.alt = '';
@@ -274,7 +300,9 @@ function initialize() {
     $('holes').append(element);
   }
   for (const config of CONFIG.pieces) {
+    const slot = CONFIG.startingSlots[pieces.size];
     const target = config.target ? holeById.get(config.target) : config;
+    const start = { x: slot.x, y: slot.y };
     if (!target || !CONFIG.shapes[target.shape]) throw new Error(`Invalid puzzle configuration: ${config.id}`);
     const element = document.createElement('button');
     element.type = 'button';
@@ -282,7 +310,7 @@ function initialize() {
     element.className = 'piece';
     element.style.zIndex = '10';
     element.setAttribute('aria-label', config.lines.join('；') || '干擾拼圖');
-    position(element, { ...config, width: target.width, height: target.height });
+    position(element, { ...start, width: target.width, height: target.height });
     element.innerHTML = shapeSvg(target.shape, 'piece', config.id);
     const text = document.createElement('span');
     text.className = 'piece-text';
@@ -291,12 +319,13 @@ function initialize() {
     setLines(text, config.lines);
     element.append(text);
     $('pieces').append(element);
-    const piece = { config, element, width: target.width, height: target.height, x: config.x, y: config.y };
+    const piece = { config, element, start, width: target.width, height: target.height, x: start.x, y: start.y };
     pieces.set(config.id, piece);
     attachDrag(piece);
   }
   $('start').addEventListener('click', startGame);
-  $('home').addEventListener('click', () => { resetPuzzle(); showPage('opening'); });
+  $('home').addEventListener('click', () => { resetPuzzle(false); showPage('opening'); });
+  $('puzzle-home').addEventListener('click', () => { resetPuzzle(false); showPage('opening'); });
   document.addEventListener('contextmenu', (event) => event.preventDefault());
   document.addEventListener('dragstart', (event) => event.preventDefault());
   document.addEventListener('keydown', (event) => {

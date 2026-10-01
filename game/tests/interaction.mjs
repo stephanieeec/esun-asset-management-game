@@ -23,7 +23,7 @@ try {
   await page.getByRole('button', { name: CONFIG.text.start, exact: true }).click();
   assert.equal(await page.locator('#puzzle').isVisible(), true);
   assert.equal(await page.locator('.hole').count(), 5);
-  assert.equal(await page.locator('.piece').count(), 8);
+  assert.equal(await page.locator('.piece').count(), 5);
   await page.screenshot({ path: 'tests/puzzle.png' });
 
   async function drag(pieceId, holeId) {
@@ -36,9 +36,7 @@ try {
     await page.waitForTimeout(260);
   }
 
-  // Incorrect shape and correct shape in wrong hole both return to their original location.
-  await drag('wrong-hexagon', 'investment');
-  assert.equal(await page.locator('#wrong-hexagon').evaluate((el) => el.style.transform), 'translate(0px, 0px)');
+  // A piece in the wrong hole returns to its assigned slot for this round.
   await drag('finance-piece', 'family');
   assert.equal(await page.locator('#finance-piece').evaluate((el) => el.style.transform), 'translate(0px, 0px)');
   assert.equal(await page.locator('.placed').count(), 0);
@@ -106,7 +104,26 @@ try {
   assert.equal(stage.height, 720);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth || document.documentElement.scrollHeight > innerHeight), false);
   assert.deepEqual(errors, []);
-  console.log('PASS: opening, 5 holes / 8 pieces, incorrect drops, cancellation, exact snapping, touchscreen taps, completion, reset, scaled dragging, and optional tool validation.');
+  let previousOrder = '';
+  for (let round = 0; round < 5; round++) {
+    const assignment = await page.locator('.piece').evaluateAll(elements => elements.map(el => ({id:el.id,x:parseFloat(el.style.left),y:parseFloat(el.style.top)})));
+    assert.equal(new Set(assignment.map(p=>`${p.x},${p.y}`)).size, 5);
+    const order = CONFIG.startingSlots.map(slot => assignment.find(p=>p.x===slot.x)?.id).join(',');
+    assert.ok(!order.includes('undefined'));
+    assert.notEqual(order, previousOrder);
+    assert.notEqual(order, CONFIG.holes.map(h=>CONFIG.pieces.find(p=>p.target===h.id).id).join(','));
+    previousOrder = order;
+    console.log(`Round ${round+1}: ${order}`);
+    for (const piece of CONFIG.pieces) {
+      if (await page.locator('#'+piece.id).isDisabled()) continue;
+      await page.locator('#'+piece.id).press('Enter');
+      await page.locator('#hole-'+piece.target).click();
+    }
+    await page.locator('#completion').waitFor({state:'visible'});
+    await page.locator('#home').click();
+    await page.locator('#start').click();
+  }
+  console.log('PASS: 5 holes / 5 pieces, wrong-drop return, cancellation, mouse/touch input, exact snapping, completion, reset, scaled dragging, and five different consecutive starting orders.');
 } finally {
   await browser.close();
 }

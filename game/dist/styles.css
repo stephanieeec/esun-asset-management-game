@@ -17,10 +17,12 @@ button:focus-visible { outline: 6px solid #007e86; outline-offset: 7px; }
 .mascot.fallback { mix-blend-mode: multiply; }
 .brand { position: absolute; overflow: hidden; pointer-events: none; }
 .brand img { position: absolute; width: 507.19%; max-width: none; height: auto; left: -203.59%; top: -183%; filter: url(#brand-teal); }
+/* Home/completion use the supplied logo without cropping, distortion, or recoloring. */
+.main-brand img { width: 100%; height: 100%; left: 0; top: 0; object-fit: contain; filter: none; }
 .filter-definitions { position: absolute; width: 0; height: 0; }
 .hole, .piece { position: absolute; padding: 0; border: 0; background: transparent; color: var(--ink); }
 .hole { overflow: visible; cursor: pointer; }
-.hole-label { position: absolute; top: 78px; height: 97px; border-radius: 65px; background: rgba(242,252,253,.88); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 34px; line-height: 1.32; font-weight: 800; }
+.hole-label { position: absolute; top: 196px; height: 97px; border-radius: 65px; background: rgba(242,252,253,.88); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 34px; line-height: 1.32; font-weight: 800; }
 .shape-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .hole .shape-svg { filter: drop-shadow(0 0 1px #fff); }
 .hole.near .shape-outline { stroke: var(--accent); stroke-width: 6; }
@@ -38,3 +40,5 @@ button:focus-visible { outline: 6px solid #007e86; outline-offset: 7px; }
 #feedback.visible { opacity: 1; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (prefers-reduced-motion: reduce) { .piece, .action-button, #feedback { transition: none; } }
+
+.game-brand img { width: 100%; height: 100%; left: 0; top: 0; object-fit: contain; filter: none; }
