@@ -1,6 +1,16 @@
 // EDIT HERE: wording, artwork, shapes, sizes, positions, and matching rules.
 // All positions are pixels on the 1920 × 1080 design stage.
 export const CONFIG = {
+  // Final local visual-editor offsets, in 1920 × 1080 canvas pixels.
+  textAdjustments: {
+    'finance-piece': { x: 0, y: -5, fontDelta: -1 },
+    'crossborder-piece': { x: 0, y: 0, fontDelta: -1 },
+    'family-piece': { x: -2, y: 0, fontDelta: -1 },
+    'insurance-piece': { x: -5, y: 6, fontDelta: -1 },
+    'investment-piece': { x: -2, y: -2, fontDelta: -1 },
+    'bubble-investment': { x: 0, y: 0, width: 10, height: 9 },
+    'title-family': { x: 2, y: 0, fontDelta: 0 },
+  },
   stage: { width: 1920, height: 1080 },
   assets: {
     background: './assets/background.png',
@@ -55,8 +65,8 @@ export const CONFIG = {
     { x: 1187, y: 660 }, { x: 1561, y: 660 },
   ],
   pieces: [
-    { id: 'finance-piece', target: 'finance', lines: ['• 銀行、證券等', '多元平台金融資產', '• 納入資產池作為擔保品'], fontSize: 26, textY: 0.58 },
-    { id: 'crossborder-piece', target: 'crossborder', lines: ['• 11個國家地區', '• 36 個海外據點', '• 境外私銀顧問返台諮詢'], fontSize: 26, textY: 0.56 },
+    { id: 'finance-piece', target: 'finance', startOffsetY: 10, lines: ['• 銀行、證券等', '多元平台金融資產', '• 納入資產池作為擔保品'], fontSize: 26, textY: 0.58 },
+    { id: 'crossborder-piece', target: 'crossborder', lines: ['• 11 個國家地區', '• 36 個海外據點', '• 境外私銀顧問返台諮詢'], fontSize: 26, textY: 0.56 },
     { id: 'family-piece', target: 'family', lines: ['• 傳承規劃', '• 家族憲章', '• 永續治理'], fontSize: 28, textY: 0.50 },
     { id: 'insurance-piece', target: 'insurance', lines: ['• 保費融資', '• 保單融資'], fontSize: 29, textY: 0.52 },
     { id: 'investment-piece', target: 'investment', lines: ['• 海外債券', '• 海外 ETF / 股票', '• 私募基金'], fontSize: 28, textY: 0.51 },

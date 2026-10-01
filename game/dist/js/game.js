@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js?v=puzzle-home-1';
+import { CONFIG } from './config.js?v=dome-offset-1';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -206,7 +206,7 @@ function shuffleStartingSlots() {
   previousStartingOrder = signature();
   order.forEach((piece, index) => {
     const slot = CONFIG.startingSlots[index];
-    piece.start = { x: slot.x, y: slot.y };
+    piece.start = { x: slot.x, y: slot.y + (piece.config.startOffsetY || 0) };
     position(piece.element, { ...piece.start, width: piece.width, height: piece.height });
   });
 }
@@ -302,7 +302,7 @@ function initialize() {
   for (const config of CONFIG.pieces) {
     const slot = CONFIG.startingSlots[pieces.size];
     const target = config.target ? holeById.get(config.target) : config;
-    const start = { x: slot.x, y: slot.y };
+    const start = { x: slot.x, y: slot.y + (config.startOffsetY || 0) };
     if (!target || !CONFIG.shapes[target.shape]) throw new Error(`Invalid puzzle configuration: ${config.id}`);
     const element = document.createElement('button');
     element.type = 'button';
@@ -356,4 +356,42 @@ function registerTools() {
   }
 }
 
+function applyFinishedTextSettings() {
+  for (const [id, piece] of pieces) {
+    const change = CONFIG.textAdjustments[id];
+    if (!change) continue;
+    const text = piece.element.querySelector('.piece-text');
+    text.style.left = `calc(7% + ${change.x || 0}px)`;
+    text.style.top = `calc(${(piece.config.textY || .5) * 100}% + ${change.y || 0}px)`;
+    text.style.fontSize = `${(piece.config.fontSize || 28) + (change.fontDelta || 0)}px`;
+  }
+  document.querySelectorAll('.hole-label').forEach((bubble, index) => {
+    const hole = CONFIG.holes[index];
+    const change = CONFIG.textAdjustments[`bubble-${hole.id}`];
+    if (change) {
+      bubble.style.left = `${hole.labelX + (change.x || 0) - (change.width || 0) / 2}px`;
+      bubble.style.top = `${196 + (change.y || 0) - (change.height || 0) / 2}px`;
+      bubble.style.width = `${hole.labelWidth + (change.width || 0)}px`;
+      bubble.style.height = `${97 + (change.height || 0)}px`;
+    }
+    const titleChange = CONFIG.textAdjustments[`title-${hole.id}`];
+    if (titleChange) {
+      const text = document.createElement('span');
+      text.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+      text.append(...bubble.childNodes); bubble.append(text);
+      text.style.transform = `translate(${titleChange.x || 0}px, ${titleChange.y || 0}px)`;
+      text.style.fontSize = `${34 + (titleChange.fontDelta || 0)}px`;
+    }
+  });
+}
+
 initialize();
+
+// The exhibition game never loads the local design interface.
+if (new URLSearchParams(location.search).get('editText') === '1' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+  resetPuzzle();
+  showPage('puzzle');
+  import('./text-editor.js').then(({ openTextEditor }) => openTextEditor(pieces));
+}
+
+if (!(new URLSearchParams(location.search).get('editText') === '1' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname))) applyFinishedTextSettings();
