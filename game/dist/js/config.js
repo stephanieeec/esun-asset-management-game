@@ -1,0 +1,62 @@
+// EDIT HERE: wording, artwork, shapes, sizes, positions, and matching rules.
+// All positions are pixels on the 1920 × 1080 design stage.
+export const CONFIG = {
+  stage: { width: 1920, height: 1080 },
+  assets: {
+    background: './assets/background.png',
+    mascot: './assets/mascot-transparent.png',
+    mascotFallback: './assets/mascot-original.jpg',
+    brand: './assets/brand-reference.png',
+  },
+  theme: { accent: '#25bac4', ink: '#00565b', headline: '#191919' },
+  behavior: { snapTolerance: 100, completionDelay: 950, fullscreenOnStart: true },
+  text: {
+    title: '玉山亞資服務配對挑戰',
+    instructions: ['認識玉山亞洲資產管理專區 5 大核心服務', '完成 5 組正確配對，即可完成挑戰!'],
+    start: '開始遊戲',
+    completed: ['恭喜您完成玉山亞資服務配對挑戰，', '獲得集章1枚!'],
+    home: '回遊戲首頁',
+    correct: '配對成功！',
+    incorrect: '再試一次，找找看相同形狀的拼圖！',
+    selected: '請點選對應的拼圖位置',
+    progress: '已完成',
+  },
+  layout: {
+    brand: { x: 772, y: 142, width: 376, height: 77 },
+    title: { x: 200, y: 312, width: 1520, height: 158, fontSize: 128 },
+    instructions: { x: 340, y: 508, width: 1240, height: 130, fontSize: 49 },
+    start: { x: 735, y: 714, width: 450, height: 132, fontSize: 70 },
+    mascot: { x: 223, y: 637, width: 320, height: 410 },
+    completion: { x: 220, y: 394, width: 1480, height: 206, fontSize: 74 },
+    home: { x: 728, y: 682, width: 464, height: 136, fontSize: 70 },
+    gameBrand: { x: 56, y: 985, width: 274, height: 56 },
+  },
+  // Paths share a 300 × 260 viewBox. A piece inherits its target's shape AND size.
+  shapes: {
+    cross: 'M105 5H195Q220 5 220 32V48Q220 69 244 69H265Q295 69 295 102V158Q295 191 265 191H244Q220 191 220 215V230Q220 255 195 255H105Q80 255 80 230V215Q80 191 56 191H35Q5 191 5 158V102Q5 69 35 69H56Q80 69 80 48V32Q80 5 105 5Z',
+    diamond: 'M126 14Q150 -6 174 14L283 108Q308 130 283 152L174 246Q150 266 126 246L17 152Q-8 130 17 108Z',
+    dome: 'M6 222C6 95 60 5 150 5S294 95 294 222Q294 255 263 255H37Q6 255 6 222Z',
+    lobed: 'M150 4C200 4 208 46 223 76C239 107 280 127 292 167C307 216 271 251 231 255C181 260 163 240 125 236C90 232 36 237 15 216C-11 185 18 137 46 106C75 73 84 5 150 4Z',
+    step: 'M112 5H188Q225 5 225 42V48Q225 69 248 69H268Q295 69 295 103V223Q295 255 266 255H34Q5 255 5 223V103Q5 69 32 69H52Q75 69 75 48V42Q75 5 112 5Z',
+    double: 'M9 77C28 5 84 4 119 35C139 53 161 53 181 35C216 4 272 5 291 77C320 189 254 254 191 218C161 200 139 200 109 218C46 254 -20 189 9 77Z',
+    wedge: 'M18 184L244 12Q292 -20 294 37V225Q294 255 262 255H41Q-10 255 18 184Z',
+    hexagon: 'M93 5H207Q225 5 237 25L292 109Q305 130 292 151L237 235Q225 255 207 255H93Q75 255 63 235L8 151Q-5 130 8 109L63 25Q75 5 93 5Z',
+  },
+  holes: [
+    { id: 'investment', shape: 'cross', label: ['多元且便捷的', '投資產品及服務'], x: 72, y: 201, width: 294, height: 260, labelX: 57, labelWidth: 309 },
+    { id: 'family', shape: 'diamond', label: ['家族辦公室服務'], x: 454, y: 192, width: 276, height: 275, labelX: 421, labelWidth: 309 },
+    { id: 'finance', shape: 'dome', label: ['金融資產融資'], x: 800, y: 226, width: 316, height: 197, labelX: 809, labelWidth: 307 },
+    { id: 'insurance', shape: 'lobed', label: ['保險融資'], x: 1170, y: 194, width: 300, height: 271, labelX: 1166, labelWidth: 308 },
+    { id: 'crossborder', shape: 'step', label: ['跨境金融服務'], x: 1544, y: 201, width: 307, height: 222, labelX: 1555, labelWidth: 307 },
+  ],
+  pieces: [
+    { id: 'finance-piece', target: 'finance', x: 280, y: 500, lines: ['• 銀行、證券等', '多元平台金融資產', '• 納入資產池作為擔保品'], fontSize: 26, textY: 0.58 },
+    { id: 'crossborder-piece', target: 'crossborder', x: 646, y: 491, lines: ['• 11個國家地區', '• 36 個海外據點', '• 境外私銀顧問返台諮詢'], fontSize: 26, textY: 0.56 },
+    { id: 'family-piece', target: 'family', x: 1028, y: 469, lines: ['• 傳承規劃', '• 家族憲章', '• 永續治理'], fontSize: 28, textY: 0.50 },
+    { id: 'wrong-double', target: null, shape: 'double', x: 1360, y: 520, width: 340, height: 184, lines: [] },
+    { id: 'insurance-piece', target: 'insurance', x: 282, y: 710, lines: ['• 保費融資', '• 保單融資'], fontSize: 29, textY: 0.52 },
+    { id: 'investment-piece', target: 'investment', x: 647, y: 710, lines: ['• 海外債券', '• 海外 ETF / 股票', '• 私募基金'], fontSize: 28, textY: 0.51 },
+    { id: 'wrong-wedge', target: null, shape: 'wedge', x: 1008, y: 740, width: 288, height: 206, lines: [] },
+    { id: 'wrong-hexagon', target: null, shape: 'hexagon', x: 1391, y: 723, width: 275, height: 238, lines: [] },
+  ],
+};
